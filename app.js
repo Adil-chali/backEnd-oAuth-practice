@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import path from "path";
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -7,8 +8,10 @@ import morgan from "morgan";
 import {engine} from "express-handlebars";
 import indexRouter from './routes/index.js';
 import authRouter from './routes/auth.js';
+import storiesRouter from './routes/stories.js';
 import passport from "passport";
 import session from "express-session";
+import MongoStore from"connect-mongo"
 import connectDB from "./config/db.js";
 
 
@@ -28,14 +31,20 @@ setupPassport(passport);
 connectDB()
 
 const app =express()
+//body parser
+app.use(express.urlencoded({extended:false}))
+app.use(express.json())
 
 //morgan logs
 if (process.env.NODE_ENV==="development") {
     app.use(morgan("dev"))
 }
 
+//handlebars Helpers
+import { formatDate } from "./helpers/hbs.js";
+
 //handlebars
-app.engine('.hbs', engine({defaultLayout:"main", extname: '.hbs'}));
+app.engine('.hbs', engine({helpers: {formatDate}, defaultLayout:"main", extname: '.hbs'}));
 app.set('view engine', '.hbs');
 
 //session
@@ -43,6 +52,7 @@ app.use(session({
   secret: 'keyboard cat',
   resave: false,
   saveUninitialized: false,
+  store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
 }))
 
 //passport middlewarre
@@ -55,6 +65,7 @@ app.use(express.static(path.join(__dirname,"public")))
 //Routes
 app.use("/",indexRouter)
 app.use("/auth",authRouter)
+app.use("/stories",storiesRouter)
 
 
 
