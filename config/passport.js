@@ -11,7 +11,7 @@ export default function (passport) {
        const newUser={
           googleId: profile.id,
           displayName: profile.displayName,
-          image: profile.photos[0].values
+          image: profile.photos[0].value
         }
 
         try {
